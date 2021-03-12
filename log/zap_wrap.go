@@ -8,57 +8,62 @@ import (
 	"os"
 )
 
+func init() {
+	logger, err := NewConfig().Build()
+	if err != nil {
+		panic(err)
+	}
+	Set(logger)
+}
+
 type Logger struct {
 	*zap.Logger
 }
 
-func Sync() {
-	_ = std.Logger.Sync()
-}
-
 var std *Logger
+var DefaultLogLevel = zap.InfoLevel
+
+func NewConfig() *zap.Config {
+	return &zap.Config{
+		Level:             zap.NewAtomicLevelAt(DefaultLogLevel),
+		Development:       false,
+		DisableCaller:     false,
+		DisableStacktrace: true,
+		Sampling: &zap.SamplingConfig{
+			Initial:    100,
+			Thereafter: 100,
+		},
+		Encoding: "json",
+		EncoderConfig: zapcore.EncoderConfig{
+			TimeKey:        "T",
+			LevelKey:       "L",
+			NameKey:        "N",
+			CallerKey:      "C",
+			FunctionKey:    zapcore.OmitKey,
+			MessageKey:     "M",
+			StacktraceKey:  "S",
+			LineEnding:     zapcore.DefaultLineEnding,
+			EncodeLevel:    zapcore.LowercaseLevelEncoder,
+			EncodeTime:     zapcore.RFC3339TimeEncoder,
+			EncodeDuration: zapcore.SecondsDurationEncoder,
+			EncodeCaller:   zapcore.ShortCallerEncoder,
+		},
+		OutputPaths:      []string{"stdout"},
+		ErrorOutputPaths: []string{"stderr"},
+		InitialFields:    map[string]interface{}{"host": getHostname()},
+	}
+}
 
 func Get() *Logger {
 	return std
 }
 
-func init() {
-	logger, err := StdCfg.Build()
-	if err != nil {
-		panic(err)
-	}
+func Set(logger *zap.Logger) {
 	std = &Logger{Logger: logger}
 }
 
-var DefaultLogLevel = zap.InfoLevel
-
-var StdCfg = &zap.Config{
-	Level:             zap.NewAtomicLevelAt(DefaultLogLevel),
-	Development:       false,
-	DisableCaller:     false,
-	DisableStacktrace: true,
-	Sampling: &zap.SamplingConfig{
-		Initial:    100,
-		Thereafter: 100,
-	},
-	Encoding: "json",
-	EncoderConfig: zapcore.EncoderConfig{
-		TimeKey:        "T",
-		LevelKey:       "L",
-		NameKey:        "N",
-		CallerKey:      "C",
-		FunctionKey:    zapcore.OmitKey,
-		MessageKey:     "M",
-		StacktraceKey:  "S",
-		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.LowercaseLevelEncoder,
-		EncodeTime:     zapcore.RFC3339TimeEncoder,
-		EncodeDuration: zapcore.SecondsDurationEncoder,
-		EncodeCaller:   zapcore.ShortCallerEncoder,
-	},
-	OutputPaths:      []string{"stdout"},
-	ErrorOutputPaths: []string{"stderr"},
-	InitialFields:    map[string]interface{}{"host": getHostname()},
+func Sync() {
+	_ = std.Logger.Sync()
 }
 
 func getHostname() string {
