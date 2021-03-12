@@ -9,7 +9,7 @@ import (
 )
 
 func init() {
-	logger, err := NewConfig().Build()
+	logger, err := NewConfig().Build(zap.AddCallerSkip(1))
 	if err != nil {
 		panic(err)
 	}
