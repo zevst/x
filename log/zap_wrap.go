@@ -18,16 +18,22 @@ func Sync() {
 
 var std *Logger
 
+func Get() *Logger {
+	return std
+}
+
 func init() {
-	logger, err := stdCfg.Build()
+	logger, err := StdCfg.Build()
 	if err != nil {
 		panic(err)
 	}
 	std = &Logger{Logger: logger}
 }
 
-var stdCfg = &zap.Config{
-	Level:             zap.NewAtomicLevelAt(zap.InfoLevel),
+var DefaultLogLevel = zap.InfoLevel
+
+var StdCfg = &zap.Config{
+	Level:             zap.NewAtomicLevelAt(DefaultLogLevel),
 	Development:       false,
 	DisableCaller:     false,
 	DisableStacktrace: true,
